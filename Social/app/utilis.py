@@ -20,7 +20,7 @@ def send_code_to_user(email):
     except User.DoesNotExist:
         return {"error": "User with this email does not exist."}
 
-    current_site = "myAuth.com"
+    current_site = "Social"
     email_body = (
         f"Hi {user.first_name},\n\n"
         f"Thanks for signing up on {current_site}. "
