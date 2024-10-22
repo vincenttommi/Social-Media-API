@@ -11,5 +11,10 @@ urlpatterns = [
     path('create-profile/', views.create_profile, name='create-profile'),  # Create user profile
     path('view-profile/', views.view_profile, name='view-profile'),  # View all profiles
     path('update-profile/<int:profile_id>/',views.update_profile, name='update-profile'),  # Update a specific profile
-    path('view-profile/<int:profile_id>/', views.view_profile, name='view-profile')
+    path('view-profile/<int:profile_id>/', views.view_profile, name='view-profile'),
+    path('creating_post/', views.creating_post,name='creating_post'),
+    path('list_posts/', views.list_posts,name='list_posts'),
+    path('list_posts/<int:post_id>/', views.list_posts, name='list_posts'),
+
+
 ]

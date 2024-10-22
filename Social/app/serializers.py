@@ -1,6 +1,6 @@
 from django.utils.encoding import smart_str, smart_bytes, force_str
 from django.urls import reverse
-from .models import User,Profile
+from .models import User,Profile,Post
 from .utilis import send_normal_email
 from django.contrib.sites.shortcuts import get_current_site
 from rest_framework_simplejwt.tokens import RefreshToken,TokenError
@@ -219,3 +219,20 @@ class ProfileSerializer(serializers.ModelSerializer):
 
 
 
+class PostSerializer(serializers.ModelSerializer):
+    author = serializers.PrimaryKeyRelatedField(read_only=True)
+    
+
+    class Meta:
+        model = Post
+        fields = ['id', 'author', 'content', 'image', 'categories', 'created_at', 'updated_at']
+
+    def create(self, validated_data):
+        return Post.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        instance.content = validated_data.get('content', instance.content)
+        instance.image = validated_data.get('image', instance.image)
+        instance.categories = validated_data.get('categories', instance.categories)
+        instance.save()
+        return instance

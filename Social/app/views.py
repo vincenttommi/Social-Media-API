@@ -3,12 +3,13 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from .serializers import LogoutUserSerializer, PasswordResetRequestSerializer, SetNewPasswordSerializer, UserRegisterSerializer, LoginSerializer, ProfileSerializer
+from .serializers import LogoutUserSerializer, PasswordResetRequestSerializer, SetNewPasswordSerializer, UserRegisterSerializer, LoginSerializer, ProfileSerializer,PostSerializer
 from .utilis import send_code_to_user
-from .models import OneTimePassword, User, Profile
+from .models import OneTimePassword, Post, User, Profile
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import smart_str, DjangoUnicodeDecodeError
 from django.contrib.auth.tokens import PasswordResetTokenGenerator 
+from django.shortcuts import get_object_or_404
 
 @api_view(['POST'])
 def user_register(request):
@@ -137,26 +138,35 @@ def view_profile(request,profile_id=None):
 
     return Response(serializer.data, status=status.HTTP_200_OK)
 
+
+
 @api_view(['PUT'])
 def update_profile(request, profile_id):
-    # Retrieve the existing profile or return a 404 if not found
+    # Retrieve the existing profile
     profile = get_object_or_404(Profile, id=profile_id)
 
-    # Compare existing profile data with incoming request data
-    incoming_data = {
-        'bio': request.data.get('bio', profile.bio),
-        'profile_picture': request.data.get('profile_picture', profile.profile_picture),
-        'location': request.data.get('location', profile.location)
-    }
+    # Initialize a dictionary to hold updates
+    updated_data = {}
 
-    # Check if any fields have changed; if not, return a 204 response
-    if (incoming_data['bio'] == profile.bio and
-        incoming_data['profile_picture'] == profile.profile_picture and
-        incoming_data['location'] == profile.location):
+    # Check incoming data and prepare updates only if they differ
+    bio = request.data.get('bio')
+    if bio is not None and bio != profile.bio:
+        updated_data['bio'] = bio
+
+    profile_picture = request.data.get('profile_picture')
+    if profile_picture is not None and profile_picture != profile.profile_picture:
+        updated_data['profile_picture'] = profile_picture
+
+    location = request.data.get('location')
+    if location is not None and location != profile.location:
+        updated_data['location'] = location
+
+    # If no updates are necessary, return a 204 response
+    if not updated_data:
         return Response({"message": "No changes detected."}, status=status.HTTP_204_NO_CONTENT)
 
-    # If changes are detected, update the profile using the serializer
-    serializer = ProfileSerializer(profile, data=incoming_data)
+    # Use the serializer to update the profile with the new data
+    serializer = ProfileSerializer(profile, data=updated_data, partial=True)
 
     if serializer.is_valid():
         serializer.save()
@@ -165,3 +175,50 @@ def update_profile(request, profile_id):
     # Handle validation errors
     print(serializer.errors)  # Log errors for debugging
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def creating_post(request):
+    # Ensure user is authenticated
+    if request.user.is_anonymous:
+        return Response({"error": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
+    
+    # Creating an instance of Post and passing new data to it
+    serializer = PostSerializer(data=request.data)
+
+    if serializer.is_valid():
+        validated_data = serializer.validated_data
+
+        # Checking for existing posts with the same details
+        existing_posts = Post.objects.filter(
+            image=validated_data['image'],
+            content=validated_data['content'],
+        ).exists()
+
+        # If a duplicate exists, throw an error
+        if existing_posts:
+            return Response({"error": "A Post with these details already exists"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Saving the Post with the current authenticated user as the author
+        serializer.save(author=request.user)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    # If the data is not valid, return an error response
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+def list_posts(request,post_id=None):
+    if post_id:
+        #if post id provided , return specific profile
+        post =get_object_or_404(Post, id=post_id)    
+        serializer = PostSerializer(post)
+    else:
+        posts  = Post.objects.all().order_by('id')
+        serializer = PostSerializer(posts, many=True)    
+
+    return Response(serializer.data, status=status.HTTP_200_OK)  

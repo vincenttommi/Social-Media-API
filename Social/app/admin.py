@@ -1,18 +1,13 @@
 from django.contrib import admin
+from .models import User, Profile, Post, Comment, Notification, OneTimePassword
 
-# Register your models here.
-from .models import User,Profile,Comment,OneTimePassword,Post,Notification
+@admin.register(User)
+class UserAdmin(admin.ModelAdmin):
+    list_display = ('email', 'first_name', 'last_name', 'is_active', 'is_staff')
+    search_fields = ('email', 'first_name', 'last_name')
 
-
-
+admin.site.register(Profile)
 admin.site.register(Post)
 admin.site.register(Comment)
-admin.site.register(OneTimePassword)
 admin.site.register(Notification)
-admin.site.register(User)
-
-
-
-
-
-
+admin.site.register(OneTimePassword)

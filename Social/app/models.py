@@ -24,7 +24,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 
     def __str__(self):
-        return self.email
+        return f"{self.first_name}{self.last_name}"
 
     @property
     def full_name(self):
@@ -51,20 +51,44 @@ class Profile(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"Profile of {self.user.username}"
+        return f"Profile of {self.user.email}"
+
+        
+
 
 
 
 
 class Post(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts')
-    content = models.TextField()
+    CATEGORY_CHOICES = [
+        ('news', 'News'),
+        ('sports', 'Sports'),
+        ('politics', 'Politics'),
+        ('lifestyle', 'Lifestyle'),
+        ('fashion', 'Fashion'),
+        ('business', 'Business'),
+        ('tours_travel', 'Tours and Travel'),
+        ('climate', 'Climate'),
+        ('science', 'Science'),
+        ('health', 'Health'),
+        ('world', 'World'),
+        ('technology', 'Technology'),
+        ('matatu_culture', 'Matatu_calture'),
+
+        
+
+    ]
+
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts')
     image = models.ImageField(upload_to='post_images/', blank=True, null=True)
+    title = models.CharField(max_length=255) 
+    content = models.TextField()
+    categories = models.CharField(max_length=50, choices=CATEGORY_CHOICES) 
     created_at = models.DateTimeField(auto_now_add=True)
-    likes = models.ManyToManyField(User, related_name='liked_posts', blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"{self.user.full_name} - {self.content[:20]}"
+        return f"{self.author.full_name()} - {self.content[:20]}"
 
 
 class Comment(models.Model):
@@ -97,3 +121,6 @@ class OneTimePassword(models.Model):
 
     def __str__(self):
         return f"{self.user.first_name} - passcode"
+
+
+    
