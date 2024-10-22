@@ -1,6 +1,6 @@
 from django.utils.encoding import smart_str, smart_bytes, force_str
 from django.urls import reverse
-from .models import User,Profile,Post
+from .models import User,Profile,Post,Comment
 from .utilis import send_normal_email
 from django.contrib.sites.shortcuts import get_current_site
 from rest_framework_simplejwt.tokens import RefreshToken,TokenError
@@ -10,6 +10,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils.http import urlsafe_base64_encode,urlsafe_base64_decode 
 from django.contrib.auth import get_user_model
+
 
 
 
@@ -236,3 +237,15 @@ class PostSerializer(serializers.ModelSerializer):
         instance.categories = validated_data.get('categories', instance.categories)
         instance.save()
         return instance
+
+
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    user  = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    post = serializers.PrimaryKeyRelatedField(queryset=Post.objects.all())
+
+    class Meta:
+        model = Comment
+        fields  = ['id','user','post','comments','created_at']
+        read_only_fields = ['id','created_at']

@@ -12,15 +12,20 @@ urlpatterns = [
     path('view-profile/', views.view_profile, name='view-profile'),  # View all profiles
     path('update-profile/<int:profile_id>/',views.update_profile, name='update-profile'),  # Update a specific profile
     path('view-profile/<int:profile_id>/', views.view_profile, name='view-profile'),
+    #posts
     path('creating_post/', views.creating_post,name='creating_post'),
     path('list_posts/', views.list_posts,name='list_posts'),
     path('list_posts/<int:post_id>/', views.list_posts, name='list_posts'),
     path('update_posts/<int:post_id>/', views.update_posts, name="update_posts"),
     path('delete_post/<int:post_id>/', views.delete_post,name='delete_post'),
 
-  
+    #comments
 
-    
+   path('comments/<int:post_id>/', views.post_comment, name='post_comment'),
+   path('list_comments/', views.list_comments, name='list_comments'),
+   path('list_comments/<int:comment_id>/', views.list_comments, name='list_comment'),
+   path('delete_comment/<int:comment_id>/', views.delete_comment, name='delete_comment')
+
 
 
 ]

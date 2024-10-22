@@ -3,9 +3,9 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from .serializers import LogoutUserSerializer, PasswordResetRequestSerializer, SetNewPasswordSerializer, UserRegisterSerializer, LoginSerializer, ProfileSerializer,PostSerializer
+from .serializers import LogoutUserSerializer, PasswordResetRequestSerializer, SetNewPasswordSerializer, UserRegisterSerializer, LoginSerializer, ProfileSerializer,PostSerializer,CommentSerializer
 from .utilis import send_code_to_user
-from .models import OneTimePassword, Post, User, Profile
+from .models import OneTimePassword, Post, User, Profile,Comment
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import smart_str, DjangoUnicodeDecodeError
 from django.contrib.auth.tokens import PasswordResetTokenGenerator 
@@ -211,6 +211,7 @@ def creating_post(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+
 @api_view(['GET'])
 def list_posts(request,post_id=None):
     if post_id:
@@ -259,3 +260,53 @@ def delete_post(request, post_id):
     except Post.DoesNotExist:
         return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
 
+
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def post_comment(request, post_id):
+    try:
+        # Retrieve the post to which the comment is being added
+        post = Post.objects.get(id=post_id)
+    except Post.DoesNotExist:
+        return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    # Add the logged-in user and the post to the request data
+    data = request.data.copy()
+    data['user'] = request.user.id  # Set the logged-in user
+    data['post'] = post.id  # Set the post
+
+    # Serialize the data
+    serializer = CommentSerializer(data=data)
+    if serializer.is_valid():
+        # Save the comment to the database
+        serializer.save()
+        return Response({"message": "Comment posted successfully", "data": serializer.data}, status=status.HTTP_201_CREATED)
+    
+    return Response({"error": "Invalid data", "details": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+@api_view(['GET'])
+def list_comments(request,comment_id=None):
+    if comment_id:
+        #if comment id provided , return specific profile
+        comment =get_object_or_404(Comment, id=comment_id)    
+        serializer = CommentSerializer(comment)
+    else:
+        comments  = Comment.objects.all().order_by('id')
+        serializer = CommentSerializer(comments, many=True)    
+
+    return Response(serializer.data, status=status.HTTP_200_OK)  
+    
+
+@api_view(['DELETE'])
+def  delete_comment(request,comment_id):
+
+    try:
+        comment = Comment.objects.get(pk=comment_id)
+        comment.delete()
+        return Response({"message","comment deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+    except Comment.DoesNotExist:
+        return Response({"error","comment not found"}, status=status.HTTP_400_BAD_REQUEST)
