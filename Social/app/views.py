@@ -222,3 +222,40 @@ def list_posts(request,post_id=None):
         serializer = PostSerializer(posts, many=True)    
 
     return Response(serializer.data, status=status.HTTP_200_OK)  
+
+
+@api_view(['PUT'])
+def update_posts(request, post_id):
+    # Find the post in the database using post_id
+    try:
+        post = Post.objects.get(id=post_id)  # Use the Post model to retrieve the post
+    except Post.DoesNotExist:
+        # If the post does not exist, return an error
+        return Response({"error": "Post not found"}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Determine if the request is partial (for PATCH requests)
+    partial = request.method == "PATCH"
+    
+    # Pass the existing post and new data to the serializer
+    serializer = PostSerializer(post, data=request.data, partial=partial)
+    
+    # Check if the provided data is valid
+    if serializer.is_valid():
+        # Save the updated post to the database
+        serializer.save()
+        # Respond with updated post data and a success message
+        return Response({"message": "Post updated successfully", "data": serializer.data}, status=status.HTTP_200_OK)
+    
+    # Return error details if the data is invalid
+    return Response({"error": "Invalid data", "details": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+    
+@api_view(['DELETE'])
+def delete_post(request, post_id):
+    try:
+        post = Post.objects.get(pk=post_id)
+        post.delete()
+        return Response({"message": "Post deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+    except Post.DoesNotExist:
+        return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
+
