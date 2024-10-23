@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import User, Profile, Post, Comment, Notification, OneTimePassword
+from .models import User, Profile, Post, Comment,OneTimePassword
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
@@ -9,5 +9,4 @@ class UserAdmin(admin.ModelAdmin):
 admin.site.register(Profile)
 admin.site.register(Post)
 admin.site.register(Comment)
-admin.site.register(Notification)
 admin.site.register(OneTimePassword)

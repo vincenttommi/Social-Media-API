@@ -111,4 +111,15 @@ class OneTimePassword(models.Model):
         return f"{self.user.first_name} - passcode"
 
 
-    
+
+class Follow(models.Model):
+    follower  =  models.ForeignKey(User, related_name='following', on_delete=models.CASCADE) # The user who is following another user.
+    following  = models.ForeignKey(User, related_name='followers', on_delete=models.CASCADE)  #The user who is being followed.
+    followed_at = models.DateTimeField(auto_now_add=True) #Records when the follow relationship was created
+
+    class Meta:
+        unique_together = ('follower', 'following') #prevent a user from  following the same person twice
+
+        def __str__(self):
+            return f'{self.follower.email} follows {self.following.email}'
+         

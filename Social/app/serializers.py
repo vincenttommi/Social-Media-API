@@ -1,6 +1,6 @@
 from django.utils.encoding import smart_str, smart_bytes, force_str
 from django.urls import reverse
-from .models import User,Profile,Post,Comment
+from .models import User,Profile,Post,Comment,Follow
 from .utilis import send_normal_email
 from django.contrib.sites.shortcuts import get_current_site
 from rest_framework_simplejwt.tokens import RefreshToken,TokenError
@@ -239,8 +239,6 @@ class PostSerializer(serializers.ModelSerializer):
         return instance
 
 
-
-
 class CommentSerializer(serializers.ModelSerializer):
     user  = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
     post = serializers.PrimaryKeyRelatedField(queryset=Post.objects.all())
@@ -249,3 +247,13 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
         fields  = ['id','user','post','comments','created_at']
         read_only_fields = ['id','created_at']
+
+
+class FollowSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Follow
+        fields  = ['follower','following','followed_at']
+        read_only_fields = ['follower','followed_at']
+
+
+

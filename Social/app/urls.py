@@ -24,8 +24,13 @@ urlpatterns = [
    path('comments/<int:post_id>/', views.post_comment, name='post_comment'),
    path('list_comments/', views.list_comments, name='list_comments'),
    path('list_comments/<int:comment_id>/', views.list_comments, name='list_comment'),
-   path('delete_comment/<int:comment_id>/', views.delete_comment, name='delete_comment')
+   path('delete_comment/<int:comment_id>/', views.delete_comment, name='delete_comment'),
 
+    #follow
+    path('follow/<int:user_id>/', views.follow_user, name='follow-user'),
+    path('unfollow/<int:user_id>/', views.unfollow_user, name='unfollow-user'),
+    path('followers/', views.get_followers, name='followers'),
+    path('following/', views.get_following, name='following'),
 
 
 ]

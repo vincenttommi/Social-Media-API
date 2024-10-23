@@ -3,9 +3,9 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from .serializers import LogoutUserSerializer, PasswordResetRequestSerializer, SetNewPasswordSerializer, UserRegisterSerializer, LoginSerializer, ProfileSerializer,PostSerializer,CommentSerializer
+from .serializers import FollowSerializer, LogoutUserSerializer, PasswordResetRequestSerializer, SetNewPasswordSerializer, UserRegisterSerializer, LoginSerializer, ProfileSerializer,PostSerializer,CommentSerializer
 from .utilis import send_code_to_user
-from .models import OneTimePassword, Post, User, Profile,Comment
+from .models import OneTimePassword, Post, User, Profile,Comment,Follow
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import smart_str, DjangoUnicodeDecodeError
 from django.contrib.auth.tokens import PasswordResetTokenGenerator 
@@ -310,3 +310,62 @@ def  delete_comment(request,comment_id):
         return Response({"message","comment deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
     except Comment.DoesNotExist:
         return Response({"error","comment not found"}, status=status.HTTP_400_BAD_REQUEST)
+    
+
+
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def follow_user(request, user_id):
+    try: 
+        following_user = User.objects.get(id=user_id)
+        
+        if request.user == following_user:
+            return Response({"detail": "You cannot follow yourself."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Check if the follow relationship already exists
+        if Follow.objects.filter(follower=request.user, following=following_user).exists():
+            return Response({"detail": "You are already following this user."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Create the follow relationship
+        Follow.objects.create(follower=request.user, following=following_user)
+        return Response({"detail": f"You are now following {following_user.email}"}, status=status.HTTP_201_CREATED)
+    
+    except User.DoesNotExist:
+        return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+       
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def unfollow_user(request, user_id):
+    try:
+        following_user = User.objects.get(id=user_id)
+
+        # Checking if the follow relationship exists
+        follow_instance = Follow.objects.filter(follower=request.user, following=following_user).first()
+        if not follow_instance:
+            return Response({"detail": "You are not following this user."}, status=status.HTTP_400_BAD_REQUEST)
+          
+        # Delete the follow relationship
+        follow_instance.delete()
+        return Response({"detail": f"You have unfollowed {following_user.email}"}, status=status.HTTP_204_NO_CONTENT)
+    
+    except User.DoesNotExist:
+        return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_followers(request):
+    followers = Follow.objects.filter(following=request.user)
+    serializer = FollowSerializer(followers, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_following(request):
+    following = Follow.objects.filter(follower=request.user)
+    serializer = FollowSerializer(following, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
