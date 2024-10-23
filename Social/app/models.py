@@ -101,18 +101,6 @@ class Comment(models.Model):
         return f"Comment by {self.user.full_name} on {self.post}"
 
 
-class Notification(models.Model):
-    recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
-    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_notifications')
-    post = models.ForeignKey(Post, on_delete=models.CASCADE, blank=True, null=True)
-    notification_type = models.CharField(max_length=50)
-    created_at = models.DateTimeField(auto_now_add=True)
-    is_read = models.BooleanField(default=False)
-
-    def __str__(self):
-        return f"Notification for {self.recipient.full_name}"
-
-
 class OneTimePassword(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     code = models.CharField(max_length=6, unique=True)
